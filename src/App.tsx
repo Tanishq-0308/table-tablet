@@ -1,13 +1,18 @@
-import { View, Text } from 'react-native'
 import React from 'react'
-import MainScreen from './screens/Home/MainScreen'
-import HomeWrapper from './screens/Home/HomeWrapper'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { NavigationContainer } from '@react-navigation/native'
+import MainStack from './navigation/MainStack'
 
 const App = () => {
   return (
-    <View style={{flex:1}}>
-      <HomeWrapper/>
-    </View>
+    <GestureHandlerRootView style={{flex:1}}>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <MainStack/>
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   )
 }
 

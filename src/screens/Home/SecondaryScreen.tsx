@@ -3,7 +3,7 @@ import React from 'react'
 
 const SecondaryScreen = () => {
   return (
-    <View>
+    <View style={styles.mainContainer}>
       <Text>SecondaryScreen</Text>
     </View>
   )
@@ -11,4 +11,9 @@ const SecondaryScreen = () => {
 
 export default SecondaryScreen
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({
+  mainContainer: {
+    flex:1,
+    backgroundColor:'black'
+  }
+})
