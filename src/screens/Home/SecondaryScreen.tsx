@@ -14,6 +14,6 @@ export default SecondaryScreen
 const styles = StyleSheet.create({
   mainContainer: {
     flex:1,
-    backgroundColor:'black'
+    backgroundColor:'white'
   }
 })

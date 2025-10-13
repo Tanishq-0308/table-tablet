@@ -1,34 +1,30 @@
-import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
+import { useButtonSettings } from '../../contexts/ButtonSettingsContext';
+import { FIRST_PAGE_BUTTONS } from '../../config/buttonConfig';
+import CustomButton from '../../components/CustomButton';
 
-import heightUpBtn from "../../assets/images/heightUp.png"
-import planeImage from "../../assets/images/planeImage.png"
-import heightDownBtn from "../../assets/images/heightDown.png"
-import sideTiltLeftBtn from "../../assets/images/tiltLeftBtn.png"
-import tiltImage from "../../assets/images/tiltImage.png"
-import sideTiltRightBtn from "../../assets/images/tiltRightBtn.png"
-import flexBtn from "../../assets/images/flexBtn.png"
-import reflexBtn from "../../assets/images/reflexBtn.png"
-import flexImage from "../../assets/images/flexImage.png"
-import trendBtn from "../../assets/images/trendBtn.png"
-import trendImage from "../../assets/images/trendImage.png"
-import revTrendBtn from "../../assets/images/revTrendBtn.png"
-import lockBtn from "../../assets/images/lockBtn.png"
-import lockImage from "../../assets/images/lockImage.png"
-import unlockBtn from "../../assets/images/unlockBtn.png"
-import zeroBtn from "../../assets/images/zeroBtn.png"
-import reverseImage from "../../assets/images/reverseImage.png"
-import revOrientBtn from "../../assets/images/orientBtn.png"
-import backUpBtn from "../../assets/images/backup.png"
-import backImage from "../../assets/images/backImage.png"
-import backDownBtn from "../../assets/images/backDown.png"
-import slideBtn from "../../assets/images/slideBtn.png"
-import revSlideBtn from "../../assets/images/revSlideBtn.png"
-import fLockBtn from "../../assets/images/fLock.png"
-import fUnlockBtn from "../../assets/images/fUnlock.png"
 
 
 const MainScreen = () => {
+  const { buttonStates } = useButtonSettings();
+
+  const fixedButtons = FIRST_PAGE_BUTTONS.filter(btn => btn.isFixed);
+
+  const dynamicButtons = FIRST_PAGE_BUTTONS.filter(
+    btn => !btn.isFixed && buttonStates[btn.id as keyof typeof buttonStates]
+  );
+
+  const allVisibleButtons = [...fixedButtons, ...dynamicButtons];
+
+  const handleUpPress = (buttonId: string, label: string) => {
+    console.log(`${label} (${buttonId}) UP pressed`);
+
+  };
+
+  const handleDownPress = (buttonId: string, label: string) => {
+    console.log(`${label} (${buttonId}) DOWN pressed`);
+  }
 
   const [isTablet, setIsTablet] = useState(Dimensions.get('window').width > 800);
 
@@ -45,45 +41,25 @@ const MainScreen = () => {
 
   return (
     <View style={styles.mainContainer}>
-      {/* <View style={styles.container1}>
-        <View style={styles.mainBox}>
-          <TouchableOpacity>
-            <Image source={heightUpBtn} />
-          </TouchableOpacity>
-          <Image source={planeImage} />
-          <TouchableOpacity>
-            <Image source={heightDownBtn} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.mainBox}>
-
-        </View>
-        <View style={styles.mainBox}>
-
-        </View>
+      <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.buttonGrid}>
+          {allVisibleButtons.map((btn)=> (
+            <View key={btn.id} style={styles.buttonWrapper}>
+              <CustomButton
+                type={btn.type}
+                upButton={btn.upButton}
+                middleImage={btn.middleImage}
+                downButton={btn.downButton}
+                onUpPress={() => handleUpPress(btn.id, btn.label)}
+                onDownPress={btn.type === 'standard'
+                  ? () => handleDownPress(btn.id, btn.label)
+                  : undefined
+                }
+              />
+            </View>
+          ))}
+        </ScrollView>
       </View>
-      <View style={styles.container2}>
-        <View style={styles.mainBox}>
-
-        </View>
-        <View style={styles.mainBox}>
-
-        </View>
-        <View style={styles.mainBox}>
-
-        </View>
-      </View>
-      <View style={styles.container3}>
-        <View style={styles.mainBox}>
-
-        </View>
-        <View style={styles.mainBox}>
-
-        </View>
-        <View style={styles.mainBox}>
-
-        </View>
-      </View> */}
     </View>
   )
 }
@@ -95,16 +71,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'black'
   },
-  container1: {
-
+ container: {
+    flex: 1,
+    backgroundColor: 'black',
   },
-  container2: {
-
+  buttonGrid: {
+    padding: 15,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
-  container3: {
-
+  buttonWrapper: {
+    width: '48%',
+    marginBottom: 20,
+    backgroundColor: '#1a1a1a',
+    borderRadius: 12,
+    padding: 10,
   },
-  mainBox: {
-    flexDirection: 'row'
-  }
 })
