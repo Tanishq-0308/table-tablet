@@ -1,8 +1,9 @@
-import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { ScrollView, StyleSheet, View } from 'react-native'
+import React from 'react'
 import { useButtonSettings } from '../../contexts/ButtonSettingsContext';
 import { FIRST_PAGE_BUTTONS } from '../../config/buttonConfig';
 import CustomButton from '../../components/CustomButton';
+import { moderateScale } from 'react-native-size-matters';
 
 
 
@@ -26,25 +27,12 @@ const MainScreen = () => {
     console.log(`${label} (${buttonId}) DOWN pressed`);
   }
 
-  const [isTablet, setIsTablet] = useState(Dimensions.get('window').width > 800);
-
-  useEffect(() => {
-    const subscription = Dimensions.addEventListener('change', ({ window }) => {
-      if (window.width > 800) {
-        setIsTablet(true);
-      } else if (window.width <= 800) {
-        setIsTablet(false);
-      }
-    })
-    return () => subscription?.remove();
-  }, []);
-
   return (
     <View style={styles.mainContainer}>
-      <View style={styles.container}>
+      <View>
         <ScrollView contentContainerStyle={styles.buttonGrid}>
           {allVisibleButtons.map((btn)=> (
-            <View key={btn.id} style={styles.buttonWrapper}>
+            <View key={btn.id}>
               <CustomButton
                 type={btn.type}
                 upButton={btn.upButton}
@@ -69,23 +57,15 @@ export default MainScreen
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: 'black'
-  },
- container: {
-    flex: 1,
     backgroundColor: 'black',
+    // borderWidth:2,
+    // borderColor:'white',
+    // justifyContent:'space-around'
   },
   buttonGrid: {
-    padding: 15,
+    paddingInline: moderateScale(10),
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  buttonWrapper: {
-    width: '48%',
-    marginBottom: 20,
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 10,
+    // justifyContent: 'space-around',
   },
 })

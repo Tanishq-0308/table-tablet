@@ -38,7 +38,7 @@ export interface ButtonConfig {
 }
 
 export const FIRST_PAGE_BUTTONS: ButtonConfig[] = [
-    // Fixed buttons (1-5)
+    // Fixed buttons (1-7)
     {
         id:'btn1',
         type:'standard',
@@ -86,6 +86,22 @@ export const FIRST_PAGE_BUTTONS: ButtonConfig[] = [
     },
     {
         id:'btn6',
+        type:'single',
+        upButton:zeroBtn,
+        middleImage:planeImage,
+        label: 'Zero',
+        isFixed: true,
+    },
+    {
+        id:'btn7',
+        type:'single',
+        upButton:revOrientBtn,
+        middleImage:reverseImage,
+        label: 'Reverse',
+        isFixed: true,
+    },
+    {
+        id:'btn8',
         type:'standard',
         upButton:slideBtn,
         middleImage:planeImage,
@@ -94,7 +110,7 @@ export const FIRST_PAGE_BUTTONS: ButtonConfig[] = [
         isFixed: false,
     },
     {
-        id:'btn7',
+        id:'btn9',
         type:'standard',
         upButton:flexBtn,
         middleImage:flexImage,
@@ -103,28 +119,12 @@ export const FIRST_PAGE_BUTTONS: ButtonConfig[] = [
         isFixed: false,
     },
     {
-        id:'btn8',
+        id:'btn10',
         type:'standard',
         upButton:fLockBtn,
         middleImage:tiltImage,
         downButton:fUnlockBtn,
         label: 'Floor',
         isFixed: false,
-    },
-    {
-        id:'btn9',
-        type:'single',
-        upButton:zeroBtn,
-        middleImage:planeImage,
-        label: 'Zero',
-        isFixed: false,
-    },
-    {
-        id:'btn10',
-        type:'single',
-        upButton:revOrientBtn,
-        middleImage:reverseImage,
-        label: 'Reverse',
-        isFixed: true,
     },
 ];
