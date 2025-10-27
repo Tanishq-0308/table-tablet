@@ -17,7 +17,7 @@ const FactorySettingsScreen = () => {
   const [showSliderChild, setShowSliderChild] = useState(false);
 
   const dynamicButtons = FIRST_PAGE_BUTTONS.filter(btn => !btn.isFixed);
-  const buttons = ['Memory', 'RTS', 'Gyro', 'Battery', 'AntiCollision', 'RTP'];
+  const buttons = ['Memory', 'RTS', 'Battery', 'AntiCollision', 'RTP'];
   return (
     <View style={styles.mainContainer}>
       <View style={styles.backButtonBox}>

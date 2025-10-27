@@ -4,11 +4,13 @@ import { useButtonSettings } from '../../contexts/ButtonSettingsContext';
 import { FIRST_PAGE_BUTTONS } from '../../config/buttonConfig';
 import CustomButton from '../../components/CustomButton';
 import { moderateScale } from 'react-native-size-matters';
+import { useFeedback } from '../../contexts/FeedbackContext';
 
 
 
 const MainScreen = () => {
   const { buttonStates } = useButtonSettings();
+  const { doFeedback} = useFeedback();
 
   const fixedButtons = FIRST_PAGE_BUTTONS.filter(btn => btn.isFixed);
 
@@ -20,11 +22,13 @@ const MainScreen = () => {
 
   const handleUpPress = (buttonId: string, label: string) => {
     console.log(`${label} (${buttonId}) UP pressed`);
+    doFeedback();
 
   };
 
   const handleDownPress = (buttonId: string, label: string) => {
     console.log(`${label} (${buttonId}) DOWN pressed`);
+    doFeedback();
   }
 
   return (

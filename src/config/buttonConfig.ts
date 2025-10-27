@@ -89,8 +89,8 @@ export const FIRST_PAGE_BUTTONS: ButtonConfig[] = [
         type:'single',
         upButton:zeroBtn,
         middleImage:planeImage,
-        label: 'Zero',
-        isFixed: true,
+        label: 'Gyro',
+        isFixed: false,
     },
     {
         id:'btn7',

@@ -2,6 +2,7 @@ import { Image, StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 import Logo from '../../assets/Logo/logo1.png'
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters' 
+import FeedbackModeSelector from './FeedbackModeSelector'
 
 const Header = () => {
   return (
@@ -10,6 +11,7 @@ const Header = () => {
         source={Logo}
         style={styles.logoImage}
       />
+      <FeedbackModeSelector/>
     </View>
   )
 }
