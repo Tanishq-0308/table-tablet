@@ -24,6 +24,8 @@ interface dynamicBtnConfig {
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
 const SecondaryScreen = () => {
+  console.log("rendering second screen");
+  
   const navigation = useNavigation<NavigationProp>();
   const { featureStates } = useButtonSettings();
   const dynamicButtons: dynamicBtnConfig[] = [
@@ -102,7 +104,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 8,
     borderWidth: 2,
-    borderColor: '#333',
+    // borderColor: '#333',
   },
   image: {
     width: widthPercentageToDP('13%'),

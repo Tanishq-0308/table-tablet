@@ -6,6 +6,7 @@ import SecondaryScreen from './SecondaryScreen';
 import Header from '../../components/Header/Header';
 
 const HomeWrapper = () => {
+    console.log("rendering homeWrapper");
   return (
     <View style={{flex:1}}>
         <Header/>

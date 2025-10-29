@@ -1,6 +1,6 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React from 'react'
-import { widthPercentageToDP } from 'react-native-responsive-screen'
+import { heightPercentageToDP, widthPercentageToDP } from 'react-native-responsive-screen'
 import { moderateScale } from 'react-native-size-matters'
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,10 +14,15 @@ const RealPositionPage = () => {
 
   return (
     <View style={styles.mainContainer}>
-      <View style={styles.backButtonBox}>
-        <TouchableOpacity onPress={()=> navigation.goBack()}>
+      <View style={styles.headBox}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButtonBox}>
           <BackButton />
         </TouchableOpacity>
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <Text style={{ color: 'white', fontSize: heightPercentageToDP(3.4), paddingRight: moderateScale(40), fontWeight: 500 }}>
+            Real-Time Position
+          </Text>
+        </View>
       </View>
     </View>
   )
@@ -26,13 +31,18 @@ const RealPositionPage = () => {
 export default RealPositionPage
 
 const styles = StyleSheet.create({
-      mainContainer: {
-        flex: 1,
-        backgroundColor: 'black',
-        paddingTop:moderateScale(10),
-        paddingLeft: moderateScale(10)
-      },
-      backButtonBox: {
-        width: widthPercentageToDP('10%')
-      }
+  mainContainer: {
+    flex: 1,
+    backgroundColor: 'black',
+    paddingTop: moderateScale(10),
+    paddingLeft: moderateScale(10)
+  },
+  backButtonBox: {
+    width: widthPercentageToDP('10%')
+  },
+  headBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
 })

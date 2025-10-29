@@ -10,12 +10,12 @@ type ButtonStates = {
 }
 
 type FeatureStates ={
-    memory: boolean;
-    rts: boolean;
-    rtp: boolean;
-    gyro: boolean;
-    battery: boolean;
-    antiCollision: boolean;
+    Memory: boolean;
+    RTS: boolean;
+    RTP: boolean;
+    Gyro: boolean;
+    Battery: boolean;
+    AntiCollision: boolean;
 }
 
 type ButtonSettingsContextType = {
@@ -40,12 +40,12 @@ export const ButtonSettingsProvider =({children}:{children: ReactNode}) => {
     });
 
     const [featureStates, setFeatureStates] = useState({
-        memory:true,
-        rts: true,
-        rtp: true,
-        gyro: true,
-        battery: true,
-        antiCollision: true,
+        Memory:true,
+        RTS: true,
+        RTP: true,
+        Gyro: true,
+        Battery: true,
+        AntiCollision: true,
     });
 
     useEffect(()=>{
@@ -97,6 +97,8 @@ export const ButtonSettingsProvider =({children}:{children: ReactNode}) => {
     }
 
     const toggleFeature =(featureId: keyof FeatureStates) => {
+        console.log(featureId);
+        
         setFeatureStates((prev) => {
             const newStates ={
                 ...prev,

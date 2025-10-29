@@ -9,6 +9,7 @@ import { useFeedback } from '../../contexts/FeedbackContext';
 
 
 const MainScreen = () => {
+    console.log("rendering mainscreen");
   const { buttonStates } = useButtonSettings();
   const { doFeedback} = useFeedback();
 

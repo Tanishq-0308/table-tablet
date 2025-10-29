@@ -18,6 +18,8 @@ const FactorySettingsScreen = () => {
 
   const dynamicButtons = FIRST_PAGE_BUTTONS.filter(btn => !btn.isFixed);
   const buttons = ['Memory', 'RTS', 'Battery', 'AntiCollision', 'RTP'];
+  
+  
   return (
     <View style={styles.mainContainer}>
       <View style={styles.backButtonBox}>
@@ -39,6 +41,16 @@ const FactorySettingsScreen = () => {
                 <Text style={featureStates[btn] ? styles.btnEnable: styles.btnText}>{btn}</Text>
               </TouchableOpacity>
             ))}
+            { featureStates.RTP &&
+            <View style={{flexDirection:'row', gap:10}}>
+              <TouchableOpacity style={styles.childBtn}>
+                <Text style={styles.btnText}>Height</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.childBtn}>
+                <Text style={styles.btnText}>Slide</Text>
+              </TouchableOpacity>
+            </View>
+            }
           </View>
         </View>
         <View>
