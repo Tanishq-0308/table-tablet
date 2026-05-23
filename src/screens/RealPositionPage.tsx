@@ -1,7 +1,7 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React from 'react'
 import { heightPercentageToDP, widthPercentageToDP } from 'react-native-responsive-screen'
-import { moderateScale } from 'react-native-size-matters'
+import { moderateScale, moderateVerticalScale } from 'react-native-size-matters'
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import BackButton from '../components/BackButton';
@@ -12,12 +12,13 @@ import { useOffsets } from '../contexts/OffsetContext';
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
+// Placeholder until linear (height/slide) sensor logic is wired in.
+const HEIGHT_MM_PLACEHOLDER: number | null = null;
+const SLIDE_MM_PLACEHOLDER: number | null = null;
+
 const RealPositionPage = () => {
   const navigation = useNavigation<NavigationProp>();
-  const {
-    isReceivingData
-  } = useBluetooth();
-
+  const { isReceivingData } = useBluetooth();
   const angles = useBluetoothAngles();
   const stats = useBluetoothStats();
   const { buttonStates } = useButtonSettings();
@@ -32,8 +33,8 @@ const RealPositionPage = () => {
     trendelenburg: angles.trendelenburg + offsets.trendUp,
     revTrendelenburg: angles.revTrendelenburg + offsets.trendDown,
   };
-  console.log(angles.backDown, angles.backUp ,angles.revTrendelenburg, angles.sideTiltLeft, angles.sideTiltRight, angles.trendelenburg);
-  
+
+  const formatMm = (v: number | null) => (v == null ? '—' : `${v}`);
 
   return (
     <View style={styles.mainContainer}>
@@ -41,64 +42,102 @@ const RealPositionPage = () => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButtonBox}>
           <BackButton />
         </TouchableOpacity>
-        <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={{ color: 'white', fontSize: heightPercentageToDP(3.4), paddingRight: moderateScale(40), fontWeight: 500 }}>
-            Real-Time Position
-          </Text>
+        <View style={styles.titleWrap}>
+          <Text style={styles.title}>Real-Time Position</Text>
         </View>
+        <View style={styles.backButtonBox} />
       </View>
 
-      <View style={styles.dataDisplay}>
-        <View style={[styles.statusBar, { backgroundColor: isReceivingData ? '#4CAF50' : '#FF5722' }]}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.statusBar, { backgroundColor: isReceivingData ? '#27ae60' : '#cf0a0a' }]}>
           <Text style={styles.statusText}>
-            {isReceivingData ? '🟢 LIVE (Native)' : '🔴 NO DATA'}
+            {isReceivingData ? '● LIVE' : '○ NO DATA'}
           </Text>
           <Text style={styles.rateText}>{stats.dataRate} pkt/s</Text>
         </View>
 
+        {/* Linear measurements */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Linear</Text>
+          <View style={styles.tileRow}>
+            <View style={styles.tile}>
+              <Text style={styles.tileLabel}>Height</Text>
+              <View style={styles.tileValueRow}>
+                <Text style={styles.tileValue}>{formatMm(HEIGHT_MM_PLACEHOLDER)}</Text>
+                <Text style={styles.tileUnit}>mm</Text>
+              </View>
+            </View>
+            <View style={styles.tile}>
+              <Text style={styles.tileLabel}>Slide</Text>
+              <View style={styles.tileValueRow}>
+                <Text style={styles.tileValue}>{formatMm(SLIDE_MM_PLACEHOLDER)}</Text>
+                <Text style={styles.tileUnit}>mm</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
         {gyroEnabled && (
           <>
-            {/* Side Tilt */}
-            <View style={styles.angleSection}>
+            <View style={styles.section}>
               <Text style={styles.sectionTitle}>Side Tilt</Text>
-              <View style={styles.angleRow}>
-                <View style={styles.angleItem}>
-                  <Text style={styles.angleLabel}>← Left</Text>
-                  <Text style={styles.angleValue}>{displayed.sideTiltLeft}°</Text>
+              <View style={styles.tileRow}>
+                <View style={styles.tile}>
+                  <Text style={styles.tileLabel}>← Left</Text>
+                  <View style={styles.tileValueRow}>
+                    <Text style={styles.tileValue}>{displayed.sideTiltLeft}</Text>
+                    <Text style={styles.tileUnit}>°</Text>
+                  </View>
                 </View>
-                <View style={styles.angleItem}>
-                  <Text style={styles.angleLabel}>Right →</Text>
-                  <Text style={styles.angleValue}>{displayed.sideTiltRight}°</Text>
+                <View style={styles.tile}>
+                  <Text style={styles.tileLabel}>Right →</Text>
+                  <View style={styles.tileValueRow}>
+                    <Text style={styles.tileValue}>{displayed.sideTiltRight}</Text>
+                    <Text style={styles.tileUnit}>°</Text>
+                  </View>
                 </View>
               </View>
             </View>
 
-            {/* Back Tilt */}
-            <View style={styles.angleSection}>
+            <View style={styles.section}>
               <Text style={styles.sectionTitle}>Back Position</Text>
-              <View style={styles.angleRow}>
-                <View style={styles.angleItem}>
-                  <Text style={styles.angleLabel}>↑ Up</Text>
-                  <Text style={styles.angleValue}>{displayed.backUp}°</Text>
+              <View style={styles.tileRow}>
+                <View style={styles.tile}>
+                  <Text style={styles.tileLabel}>↑ Up</Text>
+                  <View style={styles.tileValueRow}>
+                    <Text style={styles.tileValue}>{displayed.backUp}</Text>
+                    <Text style={styles.tileUnit}>°</Text>
+                  </View>
                 </View>
-                <View style={styles.angleItem}>
-                  <Text style={styles.angleLabel}>Down ↓</Text>
-                  <Text style={styles.angleValue}>{displayed.backDown}°</Text>
+                <View style={styles.tile}>
+                  <Text style={styles.tileLabel}>Down ↓</Text>
+                  <View style={styles.tileValueRow}>
+                    <Text style={styles.tileValue}>{displayed.backDown}</Text>
+                    <Text style={styles.tileUnit}>°</Text>
+                  </View>
                 </View>
               </View>
             </View>
 
-            {/* Trendelenburg */}
-            <View style={styles.angleSection}>
+            <View style={styles.section}>
               <Text style={styles.sectionTitle}>Trendelenburg</Text>
-              <View style={styles.angleRow}>
-                <View style={styles.angleItem}>
-                  <Text style={styles.angleLabel}>Normal</Text>
-                  <Text style={styles.angleValue}>{displayed.trendelenburg}°</Text>
+              <View style={styles.tileRow}>
+                <View style={styles.tile}>
+                  <Text style={styles.tileLabel}>Normal</Text>
+                  <View style={styles.tileValueRow}>
+                    <Text style={styles.tileValue}>{displayed.trendelenburg}</Text>
+                    <Text style={styles.tileUnit}>°</Text>
+                  </View>
                 </View>
-                <View style={styles.angleItem}>
-                  <Text style={styles.angleLabel}>Reverse</Text>
-                  <Text style={styles.angleValue}>{displayed.revTrendelenburg}°</Text>
+                <View style={styles.tile}>
+                  <Text style={styles.tileLabel}>Reverse</Text>
+                  <View style={styles.tileValueRow}>
+                    <Text style={styles.tileValue}>{displayed.revTrendelenburg}</Text>
+                    <Text style={styles.tileUnit}>°</Text>
+                  </View>
                 </View>
               </View>
             </View>
@@ -108,7 +147,7 @@ const RealPositionPage = () => {
         {stats.lastUpdateTime && (
           <Text style={styles.timeText}>Last Update: {stats.lastUpdateTime}</Text>
         )}
-      </View>
+      </ScrollView>
     </View>
   )
 }
@@ -116,77 +155,109 @@ const RealPositionPage = () => {
 export default RealPositionPage
 
 const styles = StyleSheet.create({
-      dataDisplay: {
-        padding: 16,
-        backgroundColor: '#f5f5f5',
-        borderRadius: 8,
-        margin: 16,
-    },
-    statusBar: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 12,
-        borderRadius: 8,
-        marginBottom: 16,
-    },
-    statusText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    rateText: {
-        color: 'white',
-        fontSize: 14,
-        fontWeight: '600',
-    },
   mainContainer: {
     flex: 1,
     backgroundColor: 'black',
     paddingTop: moderateScale(10),
-    paddingLeft: moderateScale(10)
-  },
-  backButtonBox: {
-    width: widthPercentageToDP('10%')
+    paddingHorizontal: moderateScale(10),
   },
   headBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
   },
-  angleSection: {
-    marginBottom: 16,
-    backgroundColor: 'white',
-    padding: 12,
-    borderRadius: 8,
+  backButtonBox: {
+    width: widthPercentageToDP('10%'),
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  angleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  angleItem: {
+  titleWrap: {
+    flex: 1,
     alignItems: 'center',
   },
-  angleLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
+  title: {
+    color: 'white',
+    fontSize: heightPercentageToDP(2.8),
+    fontWeight: '500',
   },
-  angleValue: {
-    fontSize: 24,
+  scrollContent: {
+    paddingHorizontal: widthPercentageToDP('2%'),
+    paddingTop: moderateVerticalScale(6),
+    paddingBottom: moderateVerticalScale(12),
+  },
+  statusBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateVerticalScale(5),
+    borderRadius: 8,
+    marginBottom: moderateVerticalScale(8),
+  },
+  statusText: {
+    color: 'white',
+    fontSize: heightPercentageToDP(1.6),
     fontWeight: 'bold',
-    color: '#2196F3',
+    letterSpacing: 0.5,
+  },
+  rateText: {
+    color: 'white',
+    fontSize: heightPercentageToDP(1.5),
+    fontWeight: '600',
+  },
+  section: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 10,
+    paddingBottom: moderateVerticalScale(6),
+    marginBottom: moderateVerticalScale(8),
+    overflow: 'hidden',
+  },
+  sectionTitle: {
+    color: 'white',
+    backgroundColor: '#0492b6',
+    fontSize: heightPercentageToDP(1.8),
+    fontWeight: '600',
+    paddingVertical: moderateVerticalScale(4),
+    paddingHorizontal: moderateScale(12),
+  },
+  tileRow: {
+    flexDirection: 'row',
+    paddingHorizontal: moderateScale(8),
+    paddingTop: moderateVerticalScale(6),
+    gap: moderateScale(8),
+  },
+  tile: {
+    flex: 1,
+    backgroundColor: '#0f0f0f',
+    borderWidth: 1,
+    borderColor: '#262626',
+    borderRadius: 8,
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateVerticalScale(6),
+    alignItems: 'center',
+  },
+  tileLabel: {
+    color: '#9aa0a6',
+    fontSize: heightPercentageToDP(1.5),
+    marginBottom: moderateVerticalScale(2),
+  },
+  tileValueRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: moderateScale(3),
+  },
+  tileValue: {
+    color: 'white',
+    fontSize: heightPercentageToDP(2.6),
+    fontWeight: '700',
+  },
+  tileUnit: {
+    color: '#9aa0a6',
+    fontSize: heightPercentageToDP(1.6),
+    fontWeight: '600',
   },
   timeText: {
-    fontSize: 12,
-    color: '#999',
+    color: '#666',
+    fontSize: heightPercentageToDP(1.3),
     textAlign: 'center',
-    marginTop: 8,
+    marginTop: moderateVerticalScale(4),
   },
 })
