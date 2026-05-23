@@ -12,6 +12,7 @@ interface CustomButtonProps {
     downButton?: ImageSourcePropType;
     onUpPress: () => void;
     onDownPress?: () => void;
+    onPressout: () =>void;
 }
 
 const CustomButton = ({
@@ -20,14 +21,15 @@ const CustomButton = ({
     middleImage,
     downButton,
     onUpPress,
-    onDownPress
+    onDownPress,
+    onPressout,
 }: CustomButtonProps) => {
 
     if (type === 'single') {
         return (
             <View style={styles.singleBox}>
                 <Image source={middleImage} style={styles.bigIcon} />
-                <TouchableOpacity onPressIn={onUpPress} >
+                <TouchableOpacity onPressIn={onUpPress} onPressOut={onPressout}>
                     <Image source={upButton} style={styles.icon} />
                 </TouchableOpacity>
             </View>
@@ -36,13 +38,13 @@ const CustomButton = ({
 
     return (
         <View style={styles.mainBox}>
-            <TouchableOpacity onPressIn={onUpPress}>
+            <TouchableOpacity onPressIn={onUpPress} onPressOut={onPressout}>
                 <Image source={upButton} style={styles.icon} />
             </TouchableOpacity>
 
             <Image source={middleImage} style={styles.bigIcon} />
 
-            <TouchableOpacity onPressIn={onDownPress} >
+            <TouchableOpacity onPressIn={onDownPress} onPressOut={onPressout}>
                 <Image source={downButton} style={styles.icon} />
             </TouchableOpacity>
         </View>
