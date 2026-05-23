@@ -13,6 +13,9 @@ interface CustomButtonProps {
     onUpPress: () => void;
     onDownPress?: () => void;
     onPressout: () =>void;
+    upDisabled?: boolean;
+    downDisabled?: boolean;
+    active?: boolean;
 }
 
 const CustomButton = ({
@@ -23,13 +26,21 @@ const CustomButton = ({
     onUpPress,
     onDownPress,
     onPressout,
+    upDisabled = false,
+    downDisabled = false,
+    active = false,
 }: CustomButtonProps) => {
 
     if (type === 'single') {
         return (
-            <View style={styles.singleBox}>
+            <View style={[styles.singleBox, active && styles.activeBox]}>
                 <Image source={middleImage} style={styles.bigIcon} />
-                <TouchableOpacity onPressIn={onUpPress} onPressOut={onPressout}>
+                <TouchableOpacity
+                    onPressIn={onUpPress}
+                    onPressOut={onPressout}
+                    disabled={upDisabled}
+                    style={upDisabled ? styles.disabled : undefined}
+                >
                     <Image source={upButton} style={styles.icon} />
                 </TouchableOpacity>
             </View>
@@ -37,14 +48,24 @@ const CustomButton = ({
     }
 
     return (
-        <View style={styles.mainBox}>
-            <TouchableOpacity onPressIn={onUpPress} onPressOut={onPressout}>
+        <View style={[styles.mainBox, active && styles.activeBox]}>
+            <TouchableOpacity
+                onPressIn={onUpPress}
+                onPressOut={onPressout}
+                disabled={upDisabled}
+                style={upDisabled ? styles.disabled : undefined}
+            >
                 <Image source={upButton} style={styles.icon} />
             </TouchableOpacity>
 
             <Image source={middleImage} style={styles.bigIcon} />
 
-            <TouchableOpacity onPressIn={onDownPress} onPressOut={onPressout}>
+            <TouchableOpacity
+                onPressIn={onDownPress}
+                onPressOut={onPressout}
+                disabled={downDisabled}
+                style={downDisabled ? styles.disabled : undefined}
+            >
                 <Image source={downButton} style={styles.icon} />
             </TouchableOpacity>
         </View>
@@ -93,5 +114,12 @@ const styles = StyleSheet.create({
         width: wp('10%'),
         height: hp('12%'),
         resizeMode: "contain",
+    },
+    disabled: {
+        opacity: 0.3,
+    },
+    activeBox: {
+        backgroundColor: '#1e7a3a',
+        borderColor: '#46d134',
     },
 })

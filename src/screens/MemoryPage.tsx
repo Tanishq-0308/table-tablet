@@ -1,4 +1,4 @@
-import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React from 'react'
 import BackButton from '../components/BackButton'
 import { moderateScale } from 'react-native-size-matters'
@@ -6,33 +6,42 @@ import { heightPercentageToDP, widthPercentageToDP } from 'react-native-responsi
 import { MainStackParamList } from '../navigation/types'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useNavigation } from '@react-navigation/native'
+import { MEMORY_SLOTS, MemorySlot, getMemoryPacket } from '../config/memoryConfig'
+import { useMemorySlots } from '../contexts/MemoryContext'
+import { useBluetooth } from '../contexts/BluetoothContext'
+import { useFeedback } from '../contexts/FeedbackContext'
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
 const MemoryPage = () => {
   const navigation = useNavigation<NavigationProp>();
-  const positions=[
-    {
-      id:"pos1",
-      label: "Position 1",
-    },
-    {
-      id:"pos2",
-      label: "Position 2",
-    },
-    {
-      id:"pos3",
-      label: "Position 3",
-    },
-    {
-      id:"pos4",
-      label: "Position 4",
-    },
-    {
-      id:"pos5",
-      label: "Position 5",
-    },
-  ]
+  const { status, markSet, markRecalled } = useMemorySlots();
+  const { startRepeatedRawCommand, stopRepeatedCommand } = useBluetooth();
+  const { doFeedback } = useFeedback();
+
+  const handleSetPressIn = (slot: MemorySlot) => {
+    doFeedback();
+    markSet(slot);
+    startRepeatedRawCommand(getMemoryPacket(slot, 'set'), 200);
+  };
+
+  const handleRecallPressIn = (slot: MemorySlot) => {
+    doFeedback();
+    // Only mark as recalled if this slot has been set at least once
+    if (status[slot] !== 'unset') markRecalled(slot);
+    startRepeatedRawCommand(getMemoryPacket(slot, 'recall'), 200);
+  };
+
+  const handlePressOut = () => {
+    stopRepeatedCommand();
+  };
+
+  const setButtonStyle = (slot: MemorySlot) => {
+    const s = status[slot];
+    if (s === 'set') return styles.btnSet;
+    if (s === 'recalled') return styles.btnRecalled;
+    return styles.buttons;
+  };
 
   return (
     <View style={styles.mainContainer}>
@@ -47,21 +56,23 @@ const MemoryPage = () => {
         </View>
       </View>
       <View style={styles.container}>
-        {positions.map((position)=>(
-          <View key={position.id} style={styles.positionBox}>
-            <Text style={{color:'white', fontSize:heightPercentageToDP(3.4)}}>
-              {position.label}
+        {MEMORY_SLOTS.map((slot) => (
+          <View key={slot} style={styles.positionBox}>
+            <Text style={{ color: 'white', fontSize: heightPercentageToDP(3.4) }}>
+              {`Position ${slot}`}
             </Text>
-            <View style={{flexDirection:'row', alignItems:'center', justifyContent:'center', flex:1, gap:50}}>
-              <TouchableOpacity>
-                <Text style={styles.buttons}>
-                  SET
-                </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 50 }}>
+              <TouchableOpacity
+                onPressIn={() => handleSetPressIn(slot)}
+                onPressOut={handlePressOut}
+              >
+                <Text style={setButtonStyle(slot)}>SET</Text>
               </TouchableOpacity>
-              <TouchableOpacity>
-                <Text style={styles.buttons}>
-                  RECALL
-                </Text>
+              <TouchableOpacity
+                onPressIn={() => handleRecallPressIn(slot)}
+                onPressOut={handlePressOut}
+              >
+                <Text style={styles.buttons}>RECALL</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -89,26 +100,44 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between'
   },
   container: {
-    flex:1,
-    padding:moderateScale(50),
-    gap:35
+    flex: 1,
+    padding: moderateScale(50),
+    gap: 35
   },
   positionBox: {
-    flexDirection:'row',
-    // backgroundColor:'#272626ff',
-    padding:moderateScale(6),
-    alignItems:'center',
-    borderRadius:10
+    flexDirection: 'row',
+    padding: moderateScale(6),
+    alignItems: 'center',
+    borderRadius: 10
   },
   buttons: {
-    color:'white',
-    fontSize:heightPercentageToDP(3.4),
-    // borderWidth:2,
-    padding:moderateScale(6),
-    elevation:4,
-    borderRadius:10,
-    width:widthPercentageToDP(15),
-    textAlign:'center',
-    backgroundColor:'#a5a5a518'
+    color: 'white',
+    fontSize: heightPercentageToDP(3.4),
+    padding: moderateScale(6),
+    elevation: 4,
+    borderRadius: 10,
+    width: widthPercentageToDP(15),
+    textAlign: 'center',
+    backgroundColor: '#a5a5a518'
+  },
+  btnSet: {
+    color: 'white',
+    fontSize: heightPercentageToDP(3.4),
+    padding: moderateScale(6),
+    elevation: 4,
+    borderRadius: 10,
+    width: widthPercentageToDP(15),
+    textAlign: 'center',
+    backgroundColor: '#1e7a3a'
+  },
+  btnRecalled: {
+    color: 'white',
+    fontSize: heightPercentageToDP(3.4),
+    padding: moderateScale(6),
+    elevation: 4,
+    borderRadius: 10,
+    width: widthPercentageToDP(15),
+    textAlign: 'center',
+    backgroundColor: '#d97706'
   }
 })

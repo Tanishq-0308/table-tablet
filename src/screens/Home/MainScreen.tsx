@@ -7,6 +7,12 @@ import { moderateScale } from 'react-native-size-matters';
 import { useFeedback } from '../../contexts/FeedbackContext';
 import { useBluetooth, useBluetoothAngles, useBluetoothStats } from '../../contexts/BluetoothContext';
 import { getCommandCode } from '../../config/commandConfig';  // ✅ Add this import
+import { useLock } from '../../contexts/LockContext';
+import { useReverseOrient } from '../../contexts/ReverseOrientContext';
+
+const LOCK_BUTTON_ID = 'btn5';
+const REVERSE_BUTTON_ID = 'btn7';
+const TREND_BUTTON_ID = 'btn2';
 
 
 interface MainScreenProps {
@@ -25,6 +31,8 @@ const MainScreen = () => {
 
   const { buttonStates } = useButtonSettings();
   const { doFeedback } = useFeedback();
+  const { isLocked, lock, unlock } = useLock();
+  const { isReverseActive, toggleReverse } = useReverseOrient();
 
   const fixedButtons = FIRST_PAGE_BUTTONS.filter(btn => btn.isFixed);
 
@@ -34,17 +42,42 @@ const MainScreen = () => {
 
   const allVisibleButtons = [...fixedButtons, ...dynamicButtons];
 
-  // ✅ Updated: Use command mapping
+  // While reverse-orientation is active, swap trend up/down so up sends rev-trend
+  // and down sends trend. All other buttons unaffected.
+  const resolveDirection = (buttonId: string, isUp: boolean): boolean => {
+    if (buttonId === TREND_BUTTON_ID && isReverseActive) return !isUp;
+    return isUp;
+  };
+
   const handleUpPress = (buttonId: string, label: string) => {
-    const commandCode = getCommandCode(buttonId, true);  // true = up
+    // Lock button (btn5 up) toggles app lock — no Bluetooth command sent
+    if (buttonId === LOCK_BUTTON_ID) {
+      lock();
+      doFeedback();
+      return;
+    }
+    // Reverse button (btn7) toggles reverse-orientation — no Bluetooth command sent
+    if (buttonId === REVERSE_BUTTON_ID) {
+      toggleReverse();
+      doFeedback();
+      return;
+    }
+    if (isLocked) return;
+    const commandCode = getCommandCode(buttonId, resolveDirection(buttonId, true));
     console.log(`${label} (${buttonId}) UP pressed → Command: 0x${commandCode.toString(16)}`);
     startRepeatedCommand(commandCode, 200);
     doFeedback();
   };
 
-  // ✅ Updated: Use command mapping
   const handleDownPress = (buttonId: string, label: string) => {
-    const commandCode = getCommandCode(buttonId, false);  // false = down
+    // Unlock button (btn5 down) clears app lock — no Bluetooth command sent
+    if (buttonId === LOCK_BUTTON_ID) {
+      unlock();
+      doFeedback();
+      return;
+    }
+    if (isLocked) return;
+    const commandCode = getCommandCode(buttonId, resolveDirection(buttonId, false));
     console.log(`${label} (${buttonId}) DOWN pressed → Command: 0x${commandCode.toString(16)}`);
     startRepeatedCommand(commandCode, 200);
     doFeedback();
@@ -58,22 +91,33 @@ const MainScreen = () => {
     <View style={styles.mainContainer}>
       <View>
         <ScrollView contentContainerStyle={styles.buttonGrid}>
-          {allVisibleButtons.map((btn) => (
-            <View key={btn.id}>
-              <CustomButton
-                type={btn.type}
-                upButton={btn.upButton}
-                middleImage={btn.middleImage}
-                downButton={btn.downButton}
-                onUpPress={() => handleUpPress(btn.id, btn.label)}
-                onDownPress={btn.type === 'standard'
-                  ? () => handleDownPress(btn.id, btn.label)
-                  : undefined
-                }
-                onPressout={handlePressOut}
-              />
-            </View>
-          ))}
+          {allVisibleButtons.map((btn) => {
+            const isLockBtn = btn.id === LOCK_BUTTON_ID;
+            const isReverseBtn = btn.id === REVERSE_BUTTON_ID;
+            // While locked: disable everything except the unlock action (btn5 down).
+            // The lock button (btn5 up) is also disabled while locked since we're already locked.
+            const upDisabled = isLocked && !isLockBtn ? true : (isLocked && isLockBtn);
+            const downDisabled = isLocked && !isLockBtn;
+            return (
+              <View key={btn.id}>
+                <CustomButton
+                  type={btn.type}
+                  upButton={btn.upButton}
+                  middleImage={btn.middleImage}
+                  downButton={btn.downButton}
+                  onUpPress={() => handleUpPress(btn.id, btn.label)}
+                  onDownPress={btn.type === 'standard'
+                    ? () => handleDownPress(btn.id, btn.label)
+                    : undefined
+                  }
+                  onPressout={handlePressOut}
+                  upDisabled={upDisabled}
+                  downDisabled={downDisabled}
+                  active={isReverseBtn && isReverseActive}
+                />
+              </View>
+            );
+          })}
         </ScrollView>
       </View>
     </View>

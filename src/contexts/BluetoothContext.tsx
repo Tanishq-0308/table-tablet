@@ -54,11 +54,13 @@ interface BluetoothContextType {
     connectToHC05: () => Promise<void>;
     disconnect: () => Promise<void>;
     sendCommand: (code: number) => Promise<void>;
+    sendRawCommand: (bytes: number[]) => Promise<void>;
 
     // Helper methods for repeated commands
     startRepeatedCommand: (code: number, intervalMs?: number) => void;
     stopRepeatedCommand: () => void;
     sendSingleCommand: (code: number, duration?: number) => void;
+    startRepeatedRawCommand: (bytes: number[], intervalMs?: number) => void;
 }
 
 const BluetoothContext = createContext<BluetoothContextType | undefined>(undefined);
@@ -316,6 +318,17 @@ export const BluetoothProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
     }, []);
 
+    // Send an arbitrary 16-byte command frame. Used for packets that don't fit
+    // the standard sendCommand shape (e.g. memory set/recall, which carry a
+    // non-zero byte 14).
+    const sendRawCommand = useCallback(async (bytes: number[]) => {
+        try {
+            await BluetoothNative.sendCommand(bytes);
+        } catch (error) {
+            console.error("Send raw command failed:", error);
+        }
+    }, []);
+
     // ✅ Start repeated command (for press and hold)
     const startRepeatedCommand = useCallback((code: number, intervalMs: number = 200) => {
         // Clear any existing interval
@@ -328,6 +341,19 @@ export const BluetoothProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             sendCommand(code);
         }, intervalMs);
     }, [sendCommand]);
+
+    // Start repeated raw command (press-and-hold for packets that don't fit
+    // the standard sendCommand shape, e.g. memory set/recall).
+    const startRepeatedRawCommand = useCallback((bytes: number[], intervalMs: number = 200) => {
+        if (intervalRef.current !== null) {
+            clearInterval(intervalRef.current);
+        }
+        // Fire immediately so a quick tap still sends one packet
+        sendRawCommand(bytes);
+        intervalRef.current = setInterval(() => {
+            sendRawCommand(bytes);
+        }, intervalMs);
+    }, [sendRawCommand]);
 
     // ✅ Stop repeated command
     const stopRepeatedCommand = useCallback(() => {
@@ -454,9 +480,11 @@ export const BluetoothProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         connectToHC05,
         disconnect,
         sendCommand,
+        sendRawCommand,
         startRepeatedCommand,
         stopRepeatedCommand,
         sendSingleCommand,
+        startRepeatedRawCommand,
     }), [
         isConnected,
         isReceivingData,
@@ -468,9 +496,11 @@ export const BluetoothProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         connectToHC05,
         disconnect,
         sendCommand,
+        sendRawCommand,
         startRepeatedCommand,
         stopRepeatedCommand,
         sendSingleCommand,
+        startRepeatedRawCommand,
     ]);
 
     return (

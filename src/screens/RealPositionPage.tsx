@@ -7,6 +7,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import BackButton from '../components/BackButton';
 import { MainStackParamList } from '../navigation/types';
 import { useBluetooth, useBluetoothAngles, useBluetoothStats } from '../contexts/BluetoothContext';
+import { useButtonSettings } from '../contexts/ButtonSettingsContext';
+import { useOffsets } from '../contexts/OffsetContext';
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -18,6 +20,18 @@ const RealPositionPage = () => {
 
   const angles = useBluetoothAngles();
   const stats = useBluetoothStats();
+  const { buttonStates } = useButtonSettings();
+  const gyroEnabled = buttonStates.btn6;
+  const { offsets } = useOffsets();
+
+  const displayed = {
+    sideTiltLeft: angles.sideTiltLeft + offsets.tiltLeft,
+    sideTiltRight: angles.sideTiltRight + offsets.tiltRight,
+    backUp: angles.backUp + offsets.backUp,
+    backDown: angles.backDown + offsets.backDown,
+    trendelenburg: angles.trendelenburg + offsets.trendUp,
+    revTrendelenburg: angles.revTrendelenburg + offsets.trendDown,
+  };
   console.log(angles.backDown, angles.backUp ,angles.revTrendelenburg, angles.sideTiltLeft, angles.sideTiltRight, angles.trendelenburg);
   
 
@@ -42,50 +56,54 @@ const RealPositionPage = () => {
           <Text style={styles.rateText}>{stats.dataRate} pkt/s</Text>
         </View>
 
-        {/* Side Tilt */}
-        <View style={styles.angleSection}>
-          <Text style={styles.sectionTitle}>Side Tilt</Text>
-          <View style={styles.angleRow}>
-            <View style={styles.angleItem}>
-              <Text style={styles.angleLabel}>← Left</Text>
-              <Text style={styles.angleValue}>{angles.sideTiltLeft}°</Text>
+        {gyroEnabled && (
+          <>
+            {/* Side Tilt */}
+            <View style={styles.angleSection}>
+              <Text style={styles.sectionTitle}>Side Tilt</Text>
+              <View style={styles.angleRow}>
+                <View style={styles.angleItem}>
+                  <Text style={styles.angleLabel}>← Left</Text>
+                  <Text style={styles.angleValue}>{displayed.sideTiltLeft}°</Text>
+                </View>
+                <View style={styles.angleItem}>
+                  <Text style={styles.angleLabel}>Right →</Text>
+                  <Text style={styles.angleValue}>{displayed.sideTiltRight}°</Text>
+                </View>
+              </View>
             </View>
-            <View style={styles.angleItem}>
-              <Text style={styles.angleLabel}>Right →</Text>
-              <Text style={styles.angleValue}>{angles.sideTiltRight}°</Text>
-            </View>
-          </View>
-        </View>
 
-        {/* Back Tilt */}
-        <View style={styles.angleSection}>
-          <Text style={styles.sectionTitle}>Back Position</Text>
-          <View style={styles.angleRow}>
-            <View style={styles.angleItem}>
-              <Text style={styles.angleLabel}>↑ Up</Text>
-              <Text style={styles.angleValue}>{angles.backUp}°</Text>
+            {/* Back Tilt */}
+            <View style={styles.angleSection}>
+              <Text style={styles.sectionTitle}>Back Position</Text>
+              <View style={styles.angleRow}>
+                <View style={styles.angleItem}>
+                  <Text style={styles.angleLabel}>↑ Up</Text>
+                  <Text style={styles.angleValue}>{displayed.backUp}°</Text>
+                </View>
+                <View style={styles.angleItem}>
+                  <Text style={styles.angleLabel}>Down ↓</Text>
+                  <Text style={styles.angleValue}>{displayed.backDown}°</Text>
+                </View>
+              </View>
             </View>
-            <View style={styles.angleItem}>
-              <Text style={styles.angleLabel}>Down ↓</Text>
-              <Text style={styles.angleValue}>{angles.backDown}°</Text>
-            </View>
-          </View>
-        </View>
 
-        {/* Trendelenburg */}
-        <View style={styles.angleSection}>
-          <Text style={styles.sectionTitle}>Trendelenburg</Text>
-          <View style={styles.angleRow}>
-            <View style={styles.angleItem}>
-              <Text style={styles.angleLabel}>Normal</Text>
-              <Text style={styles.angleValue}>{angles.trendelenburg}°</Text>
+            {/* Trendelenburg */}
+            <View style={styles.angleSection}>
+              <Text style={styles.sectionTitle}>Trendelenburg</Text>
+              <View style={styles.angleRow}>
+                <View style={styles.angleItem}>
+                  <Text style={styles.angleLabel}>Normal</Text>
+                  <Text style={styles.angleValue}>{displayed.trendelenburg}°</Text>
+                </View>
+                <View style={styles.angleItem}>
+                  <Text style={styles.angleLabel}>Reverse</Text>
+                  <Text style={styles.angleValue}>{displayed.revTrendelenburg}°</Text>
+                </View>
+              </View>
             </View>
-            <View style={styles.angleItem}>
-              <Text style={styles.angleLabel}>Reverse</Text>
-              <Text style={styles.angleValue}>{angles.revTrendelenburg}°</Text>
-            </View>
-          </View>
-        </View>
+          </>
+        )}
 
         {stats.lastUpdateTime && (
           <Text style={styles.timeText}>Last Update: {stats.lastUpdateTime}</Text>

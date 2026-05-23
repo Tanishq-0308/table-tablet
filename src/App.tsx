@@ -6,6 +6,10 @@ import MainStack from './navigation/MainStack'
 import { ButtonSettingsProvider } from './contexts/ButtonSettingsContext'
 import { FeedbackProvider } from './contexts/FeedbackContext'
 import { BluetoothProvider } from './contexts/BluetoothContext'
+import { LockProvider } from './contexts/LockContext'
+import { ReverseOrientProvider } from './contexts/ReverseOrientContext'
+import { MemoryProvider } from './contexts/MemoryContext'
+import { OffsetProvider } from './contexts/OffsetContext'
 import { NativeEventEmitter, NativeModules } from 'react-native'
 
 const { BluetoothModule }= NativeModules;
@@ -21,9 +25,17 @@ const App = () => {
         <BluetoothProvider>
         <FeedbackProvider>
           <ButtonSettingsProvider>
-            <NavigationContainer>
-              <MainStack />
-            </NavigationContainer>
+            <LockProvider>
+              <ReverseOrientProvider>
+                <MemoryProvider>
+                  <OffsetProvider>
+                    <NavigationContainer>
+                      <MainStack />
+                    </NavigationContainer>
+                  </OffsetProvider>
+                </MemoryProvider>
+              </ReverseOrientProvider>
+            </LockProvider>
           </ButtonSettingsProvider>
         </FeedbackProvider>
         </BluetoothProvider>

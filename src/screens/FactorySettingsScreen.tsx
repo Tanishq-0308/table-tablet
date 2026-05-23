@@ -1,5 +1,5 @@
-import { StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native'
-import React, { useRef, useState } from 'react'
+import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native'
+import React, { useState } from 'react'
 import BackButton from '../components/BackButton'
 import { heightPercentageToDP, widthPercentageToDP } from 'react-native-responsive-screen'
 import { moderateScale, moderateVerticalScale } from 'react-native-size-matters'
@@ -11,72 +11,112 @@ import { useButtonSettings } from '../contexts/ButtonSettingsContext'
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
+// Feature toggles shown under "Enable / Disable" (in addition to the dynamic main-screen buttons).
+const FEATURE_TOGGLES = ['Memory', 'RTS', 'Battery', 'AntiCollision', 'RTP'] as const;
+
 const FactorySettingsScreen = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { buttonStates, toggleButton, toggleFeature, featureStates } = useButtonSettings();
+  const { buttonStates, toggleButton, featureStates, toggleFeature } = useButtonSettings();
   const [showSliderChild, setShowSliderChild] = useState(false);
 
   const dynamicButtons = FIRST_PAGE_BUTTONS.filter(btn => !btn.isFixed);
-  const buttons = ['Memory', 'RTS', 'Battery', 'AntiCollision', 'RTP'];
-  
-  
+
+  const renderToggleRow = (label: string, value: boolean, onValueChange: () => void) => (
+    <View key={label} style={styles.toggleRow}>
+      <Text style={styles.toggleLabel}>{label}</Text>
+      <Switch
+        value={value}
+        onValueChange={onValueChange}
+        trackColor={{ false: '#3a3a3a', true: '#27ae60' }}
+        thumbColor={value ? '#ffffff' : '#cccccc'}
+      />
+    </View>
+  );
+
   return (
     <View style={styles.mainContainer}>
-      <View style={styles.backButtonBox}>
-        <TouchableOpacity onPress={()=> navigation.goBack()}>
+      <View style={styles.headBox}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButtonBox}>
           <BackButton />
         </TouchableOpacity>
+        <View style={styles.titleWrap}>
+          <Text style={styles.title}>Factory Settings</Text>
+        </View>
+        <View style={styles.backButtonBox} />
       </View>
-      <View style={styles.container}>
-        <View>
-          <Text style={styles.heading}>Enable / Disable</Text>
-          <View>
-            {dynamicButtons.map(btn => (
-              <TouchableOpacity key={btn.id} style={styles.buttons} onPress={()=> toggleButton(btn.id as keyof typeof buttonStates)}>
-                <Text style={buttonStates[btn.id as keyof buttonStates] ? styles.btnEnable: styles.btnText}>{btn.label}</Text>
-              </TouchableOpacity>
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.columns}>
+
+          {/* Enable / Disable card */}
+          <View style={[styles.card, styles.cardWide]}>
+            <Text style={styles.cardHeader}>Enable / Disable</Text>
+
+            {dynamicButtons.map(btn =>
+              renderToggleRow(
+                btn.label,
+                buttonStates[btn.id as keyof typeof buttonStates],
+                () => toggleButton(btn.id as keyof typeof buttonStates)
+              )
+            )}
+
+            {FEATURE_TOGGLES.map(featureId => (
+              <View key={featureId}>
+                {renderToggleRow(
+                  featureId,
+                  featureStates[featureId as keyof typeof featureStates],
+                  () => toggleFeature(featureId as keyof typeof featureStates)
+                )}
+                {featureId === 'RTP' && featureStates.RTP && (
+                  <View style={styles.childRow}>
+                    <View style={styles.childPill}>
+                      <Text style={styles.childPillText}>Height</Text>
+                    </View>
+                    <View style={styles.childPill}>
+                      <Text style={styles.childPillText}>Slide</Text>
+                    </View>
+                  </View>
+                )}
+              </View>
             ))}
-            {buttons.map((btn, index )=> (
-              <TouchableOpacity key={index} style={styles.buttons} onPress={() =>toggleFeature(btn as keyof typeof featureStates)}>
-                <Text style={featureStates[btn] ? styles.btnEnable: styles.btnText}>{btn}</Text>
-              </TouchableOpacity>
-            ))}
-            { featureStates.RTP &&
-            <View style={{flexDirection:'row', gap:10}}>
-              <TouchableOpacity style={styles.childBtn}>
-                <Text style={styles.btnText}>Height</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.childBtn}>
-                <Text style={styles.btnText}>Slide</Text>
-              </TouchableOpacity>
-            </View>
-            }
           </View>
-        </View>
-        <View>
-          <Text style={styles.heading}>Key Configuration</Text>
-          <View>
-            <TouchableOpacity style={styles.buttons} onPress={()=> setShowSliderChild((prev)=>!prev)}>
-              <Text style={styles.btnText} >Slider</Text>
+
+          {/* Key Configuration card */}
+          <View style={styles.card}>
+            <Text style={styles.cardHeader}>Key Configuration</Text>
+
+            <TouchableOpacity
+              style={styles.toggleRow}
+              onPress={() => setShowSliderChild(prev => !prev)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.toggleLabel}>Slider</Text>
+              <Text style={styles.chevron}>{showSliderChild ? '▾' : '▸'}</Text>
             </TouchableOpacity>
-            { showSliderChild &&
-            <View style={{flexDirection:'row', gap:10}}>
-              <TouchableOpacity style={styles.childBtn}>
-                <Text style={styles.btnText}>Zero</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.childBtn}>
-                <Text style={styles.btnText}>Flex / Reflex</Text>
-              </TouchableOpacity>
-            </View>
-            }
+
+            {showSliderChild && (
+              <View style={styles.childRow}>
+                <View style={styles.childPill}>
+                  <Text style={styles.childPillText}>Zero</Text>
+                </View>
+                <View style={styles.childPill}>
+                  <Text style={styles.childPillText}>Flex / Reflex</Text>
+                </View>
+              </View>
+            )}
           </View>
-        </View>
-        <View>
-          <TouchableOpacity onPress={()=>navigation.navigate('OffsetPage')}>
-            <Text style={styles.heading}>Offset</Text>
+
+          {/* Offset navigation tile */}
+          <TouchableOpacity
+            style={[styles.card, styles.offsetTile]}
+            onPress={() => navigation.navigate('OffsetPage')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.offsetTileTitle}>Offset</Text>
+            <Text style={styles.offsetTileHint}>Configure offsets ›</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
     </View>
   )
 }
@@ -87,59 +127,104 @@ const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
     backgroundColor: 'black',
-    paddingTop:moderateScale(10),
-    paddingLeft: moderateScale(10)
+    paddingTop: moderateScale(10),
+    paddingHorizontal: moderateScale(10),
+  },
+  headBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   backButtonBox: {
-    width: widthPercentageToDP('10%')
+    width: widthPercentageToDP('10%'),
   },
-  settingRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  titleWrap: {
+    flex: 1,
     alignItems: 'center',
-    backgroundColor: '#2d2d2d',
-    padding: 15,
+  },
+  title: {
+    color: 'white',
+    fontSize: heightPercentageToDP(3.4),
+    fontWeight: '500',
+  },
+  scrollContent: {
+    paddingVertical: moderateVerticalScale(12),
+    paddingHorizontal: widthPercentageToDP('2%'),
+  },
+  columns: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: moderateScale(12),
+  },
+  card: {
+    flex: 1,
+    backgroundColor: '#1a1a1a',
+    borderRadius: 12,
+    paddingBottom: moderateVerticalScale(8),
+    overflow: 'hidden',
+  },
+  cardWide: {
+    flex: 1.4,
+  },
+  cardHeader: {
+    color: 'white',
+    backgroundColor: '#0492b6',
+    fontSize: heightPercentageToDP(2.6),
+    fontWeight: '600',
+    paddingVertical: moderateVerticalScale(8),
+    textAlign: 'center',
+    marginBottom: moderateVerticalScale(6),
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: moderateScale(14),
+    paddingVertical: moderateVerticalScale(8),
+  },
+  toggleLabel: {
+    color: '#e5e5e5',
+    fontSize: heightPercentageToDP(2.4),
+    fontWeight: '500',
+  },
+  chevron: {
+    color: '#9aa0a6',
+    fontSize: heightPercentageToDP(2.6),
+    paddingHorizontal: moderateScale(4),
+  },
+  childRow: {
+    flexDirection: 'row',
+    gap: moderateScale(8),
+    paddingHorizontal: moderateScale(14),
+    paddingBottom: moderateVerticalScale(8),
+  },
+  childPill: {
+    flex: 1,
+    backgroundColor: '#262626',
     borderRadius: 8,
-    marginBottom: 10,
+    paddingVertical: moderateVerticalScale(8),
+    alignItems: 'center',
   },
-  container: {
-    flexDirection:'row',
-    justifyContent:'space-between',
-    padding:moderateScale(30)
+  childPillText: {
+    color: '#cccccc',
+    fontSize: heightPercentageToDP(2.1),
+    fontWeight: '500',
   },
-  heading: {
-    color:'white',
-    backgroundColor: '#0492b6ff',
-    fontSize: heightPercentageToDP(3),
-    padding:moderateScale(5),
-    width:widthPercentageToDP(24),
-    textAlign:'center',
-    fontWeight:600
+  offsetTile: {
+    paddingTop: 0,
+    paddingBottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: moderateVerticalScale(40),
   },
-  buttons: {
-    // borderWidth:1,
-    // borderColor: 'white',
-    marginTop:moderateVerticalScale(7),
-    padding:moderateScale(2),
-    backgroundColor: '#969292ff'
+  offsetTileTitle: {
+    color: 'white',
+    fontSize: heightPercentageToDP(3.2),
+    fontWeight: '600',
+    marginBottom: moderateVerticalScale(6),
   },
-  childBtn: {
-    backgroundColor: '#969292ff',
-    marginTop:moderateVerticalScale(7),
-    padding:moderateScale(2),
-    flex:1
+  offsetTileHint: {
+    color: '#9aa0a6',
+    fontSize: heightPercentageToDP(2),
   },
-  btnText: {
-    fontSize: heightPercentageToDP(3),
-    paddingVertical:moderateVerticalScale(2),
-    color:'white',
-    textAlign:'center',
-  },
-  btnEnable: {
-    fontSize: heightPercentageToDP(3),
-    paddingVertical:moderateVerticalScale(2),
-    color:'white',
-    backgroundColor:'green',
-    textAlign:'center',
-  }
 })
