@@ -13,6 +13,7 @@ import { useReverseOrient } from '../../contexts/ReverseOrientContext';
 const LOCK_BUTTON_ID = 'btn5';
 const REVERSE_BUTTON_ID = 'btn7';
 const TREND_BUTTON_ID = 'btn2';
+const ZERO_BUTTON_ID = 'btn6';
 
 
 interface MainScreenProps {
@@ -24,7 +25,8 @@ const MainScreen = () => {
     isConnected,
     isReceivingData,
     startRepeatedCommand,
-    stopRepeatedCommand
+    stopRepeatedCommand,
+    startRepeatedZeroCommand,
   } = useBluetooth();
 
   const stats = useBluetoothStats();
@@ -63,6 +65,14 @@ const MainScreen = () => {
       return;
     }
     if (isLocked) return;
+    // Zero (btn6) requires a two-packet sequence interleaved while held —
+    // mirrors the hardware remote's two-button combo.
+    if (buttonId === ZERO_BUTTON_ID) {
+      console.log(`${label} (${buttonId}) UP pressed → Zero combo packets`);
+      startRepeatedZeroCommand(200);
+      doFeedback();
+      return;
+    }
     const commandCode = getCommandCode(buttonId, resolveDirection(buttonId, true));
     console.log(`${label} (${buttonId}) UP pressed → Command: 0x${commandCode.toString(16)}`);
     startRepeatedCommand(commandCode, 200);

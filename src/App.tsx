@@ -15,8 +15,14 @@ import { NativeEventEmitter, NativeModules } from 'react-native'
 const { BluetoothModule }= NativeModules;
 const btEvent = new NativeEventEmitter(BluetoothModule);
 
-btEvent.addListener("BluetoothLog", (data) => {
-  // console.log("NATIVE LOG:", data.log);
+btEvent.addListener("BluetoothLog", (_data) => {
+  // Hex dump disabled. To re-enable for debugging packet shape, uncomment:
+  // const binary = global.atob(_data.log);
+  // const hex: string[] = [];
+  // for (let i = 0; i < binary.length; i++) {
+  //   hex.push(binary.charCodeAt(i).toString(16).padStart(2, '0'));
+  // }
+  // console.log("NATIVE LOG:", hex.join(' '));
 });
 const App = () => {
   return (

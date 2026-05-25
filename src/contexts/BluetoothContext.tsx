@@ -61,6 +61,7 @@ interface BluetoothContextType {
     stopRepeatedCommand: () => void;
     sendSingleCommand: (code: number, duration?: number) => void;
     startRepeatedRawCommand: (bytes: number[], intervalMs?: number) => void;
+    startRepeatedZeroCommand: (intervalMs?: number) => void;
 }
 
 const BluetoothContext = createContext<BluetoothContextType | undefined>(undefined);
@@ -355,6 +356,36 @@ export const BluetoothProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }, intervalMs);
     }, [sendRawCommand]);
 
+    // Gyro Zero requires two interleaved packets to match the hardware
+    // remote's two-button combo: a "modifier" frame followed by the Zero
+    // frame. Alternate them while held.
+    const startRepeatedZeroCommand = useCallback((intervalMs: number = 200) => {
+        const modifierPacket = [
+            0x43, 0x47, 0xFE, 0x00,
+            0x01, 0x00, 0x00, 0x01,
+            0x00, 0x95, 0xA5, 0xB5,
+            0xC5, 0xD5, 0x13, 0x4E,
+        ];
+        const zeroPacket = [
+            0x43, 0x47, 0xFE, 0x26,
+            0x19, 0x00, 0x00, 0x01,
+            0x00, 0x95, 0xA5, 0xB5,
+            0xC5, 0xD5, 0x12, 0x4E,
+        ];
+
+        if (intervalRef.current !== null) {
+            clearInterval(intervalRef.current);
+        }
+
+        let sendModifierNext = true;
+        const tick = () => {
+            sendRawCommand(sendModifierNext ? modifierPacket : zeroPacket);
+            sendModifierNext = !sendModifierNext;
+        };
+        tick();
+        intervalRef.current = setInterval(tick, intervalMs);
+    }, [sendRawCommand]);
+
     // ✅ Stop repeated command
     const stopRepeatedCommand = useCallback(() => {
         if (intervalRef.current !== null) {
@@ -388,8 +419,6 @@ export const BluetoothProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 // console.log("helloo+++++++++++++++++++++++++++++++++++");
                 
                 // ✅ Batch state updates to minimize re-renders
-                console.log(data.backDown, data.backUp, data.revTrendelenburg, data.sideTiltLeft, data.sideTiltRight, data.trendelenburg, data.timestamp);
-                
                 setAngles({
                     sideTiltLeft: data.sideTiltLeft,
                     sideTiltRight: data.sideTiltRight,
@@ -485,6 +514,7 @@ export const BluetoothProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         stopRepeatedCommand,
         sendSingleCommand,
         startRepeatedRawCommand,
+        startRepeatedZeroCommand,
     }), [
         isConnected,
         isReceivingData,
@@ -501,6 +531,7 @@ export const BluetoothProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         stopRepeatedCommand,
         sendSingleCommand,
         startRepeatedRawCommand,
+        startRepeatedZeroCommand,
     ]);
 
     return (

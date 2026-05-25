@@ -6,10 +6,11 @@ class PacketParser {
     companion object {
         private const val TAG = "PacketParser"
         
-        // ✅ UPDATED: Correct header "CG" (0x43 0x47)
+        // Accept any frame starting with 0x43 ('C') — second byte varies
+        // between table firmwares (seen: 'G' 0x47, 'D' 0x44). Structural
+        // validation (length 21 + terminator 0x4E) is what we actually trust.
         private const val HEADER1: Byte = 0x43 // 'C'
-        private const val HEADER2: Byte = 0x47 // 'G'
-        
+
         // ✅ UPDATED: Correct terminator "N" (0x4E)
         private const val TERMINATOR: Byte = 0x4E // 'N'
         
@@ -63,9 +64,9 @@ class PacketParser {
                     revTrendelenburg = packet[8].toInt() and 0xFF
                 )
                 
-                Log.d(TAG, "🎯 Parsed angles: L=${angles.sideTiltLeft} R=${angles.sideTiltRight} " +
-                        "BU=${angles.backUp} BD=${angles.backDown} T=${angles.trendelenburg} RT=${angles.revTrendelenburg}")
-                
+                // Log.d(TAG, "🎯 Parsed angles: L=${angles.sideTiltLeft} R=${angles.sideTiltRight} " +
+                //         "BU=${angles.backUp} BD=${angles.backDown} T=${angles.trendelenburg} RT=${angles.revTrendelenburg}")
+
                 anglesList.add(angles)
                 repeat(PACKET_SIZE) { rxBuffer.removeAt(0) }
             } else {
@@ -79,9 +80,11 @@ class PacketParser {
     }
 
     private fun findHeader(): Int {
-        // ✅ UPDATED: Look for "CG" header (2 bytes, not 3)
-        for (i in 0 until rxBuffer.size - 1) {
-            if (rxBuffer[i] == HEADER1 && rxBuffer[i + 1] == HEADER2) {
+        // Match any 0x43 ('C') as the first byte; the second byte (e.g. 'G',
+        // 'D') varies by firmware. Terminator + length check later confirms
+        // the frame.
+        for (i in 0 until rxBuffer.size) {
+            if (rxBuffer[i] == HEADER1) {
                 return i
             }
         }

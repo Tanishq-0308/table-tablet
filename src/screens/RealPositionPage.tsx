@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React from 'react'
 import { heightPercentageToDP, widthPercentageToDP } from 'react-native-responsive-screen'
-import { moderateScale, moderateVerticalScale } from 'react-native-size-matters'
+import { moderateScale } from 'react-native-size-matters'
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import BackButton from '../components/BackButton';
@@ -12,13 +12,12 @@ import { useOffsets } from '../contexts/OffsetContext';
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
-// Placeholder until linear (height/slide) sensor logic is wired in.
-const HEIGHT_MM_PLACEHOLDER: number | null = null;
-const SLIDE_MM_PLACEHOLDER: number | null = null;
-
 const RealPositionPage = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { isReceivingData } = useBluetooth();
+  const {
+    isReceivingData
+  } = useBluetooth();
+
   const angles = useBluetoothAngles();
   const stats = useBluetoothStats();
   const { buttonStates } = useButtonSettings();
@@ -33,111 +32,92 @@ const RealPositionPage = () => {
     trendelenburg: angles.trendelenburg + offsets.trendUp,
     revTrendelenburg: angles.revTrendelenburg + offsets.trendDown,
   };
-
-  const formatMm = (v: number | null) => (v == null ? '—' : `${v}`);
-
   return (
     <View style={styles.mainContainer}>
       <View style={styles.headBox}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButtonBox}>
           <BackButton />
         </TouchableOpacity>
-        <View style={styles.titleWrap}>
-          <Text style={styles.title}>Real-Time Position</Text>
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <Text style={{ color: 'white', fontSize: heightPercentageToDP(3.4), paddingRight: moderateScale(40), fontWeight: 500 }}>
+            Real-Time Position
+          </Text>
         </View>
-        <View style={styles.backButtonBox} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={[styles.statusBar, { backgroundColor: isReceivingData ? '#27ae60' : '#cf0a0a' }]}>
+      <ScrollView contentContainerStyle={styles.dataDisplay}>
+        <View style={[styles.statusBar, { backgroundColor: isReceivingData ? '#4CAF50' : '#FF5722' }]}>
           <Text style={styles.statusText}>
-            {isReceivingData ? '● LIVE' : '○ NO DATA'}
+            {isReceivingData ? '🟢 LIVE (Native)' : '🔴 NO DATA'}
           </Text>
           <Text style={styles.rateText}>{stats.dataRate} pkt/s</Text>
         </View>
 
-        {/* Linear measurements */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Linear</Text>
-          <View style={styles.tileRow}>
-            <View style={styles.tile}>
-              <Text style={styles.tileLabel}>Height</Text>
-              <View style={styles.tileValueRow}>
-                <Text style={styles.tileValue}>{formatMm(HEIGHT_MM_PLACEHOLDER)}</Text>
-                <Text style={styles.tileUnit}>mm</Text>
-              </View>
-            </View>
-            <View style={styles.tile}>
-              <Text style={styles.tileLabel}>Slide</Text>
-              <View style={styles.tileValueRow}>
-                <Text style={styles.tileValue}>{formatMm(SLIDE_MM_PLACEHOLDER)}</Text>
-                <Text style={styles.tileUnit}>mm</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
         {gyroEnabled && (
           <>
-            <View style={styles.section}>
+            {/* Side Tilt */}
+            <View style={styles.angleSection}>
               <Text style={styles.sectionTitle}>Side Tilt</Text>
-              <View style={styles.tileRow}>
-                <View style={styles.tile}>
-                  <Text style={styles.tileLabel}>← Left</Text>
-                  <View style={styles.tileValueRow}>
-                    <Text style={styles.tileValue}>{displayed.sideTiltLeft}</Text>
-                    <Text style={styles.tileUnit}>°</Text>
-                  </View>
+              <View style={styles.angleRow}>
+                <View style={styles.angleItem}>
+                  <Text style={styles.angleLabel}>← Left</Text>
+                  <Text style={styles.angleValue}>{displayed.sideTiltLeft}°</Text>
                 </View>
-                <View style={styles.tile}>
-                  <Text style={styles.tileLabel}>Right →</Text>
-                  <View style={styles.tileValueRow}>
-                    <Text style={styles.tileValue}>{displayed.sideTiltRight}</Text>
-                    <Text style={styles.tileUnit}>°</Text>
-                  </View>
+                <View style={styles.angleItem}>
+                  <Text style={styles.angleLabel}>Right →</Text>
+                  <Text style={styles.angleValue}>{displayed.sideTiltRight}°</Text>
                 </View>
               </View>
             </View>
 
-            <View style={styles.section}>
+            {/* Back Tilt */}
+            <View style={styles.angleSection}>
               <Text style={styles.sectionTitle}>Back Position</Text>
-              <View style={styles.tileRow}>
-                <View style={styles.tile}>
-                  <Text style={styles.tileLabel}>↑ Up</Text>
-                  <View style={styles.tileValueRow}>
-                    <Text style={styles.tileValue}>{displayed.backUp}</Text>
-                    <Text style={styles.tileUnit}>°</Text>
-                  </View>
+              <View style={styles.angleRow}>
+                <View style={styles.angleItem}>
+                  <Text style={styles.angleLabel}>↑ Up</Text>
+                  <Text style={styles.angleValue}>{displayed.backUp}°</Text>
                 </View>
-                <View style={styles.tile}>
-                  <Text style={styles.tileLabel}>Down ↓</Text>
-                  <View style={styles.tileValueRow}>
-                    <Text style={styles.tileValue}>{displayed.backDown}</Text>
-                    <Text style={styles.tileUnit}>°</Text>
-                  </View>
+                <View style={styles.angleItem}>
+                  <Text style={styles.angleLabel}>Down ↓</Text>
+                  <Text style={styles.angleValue}>{displayed.backDown}°</Text>
                 </View>
               </View>
             </View>
 
-            <View style={styles.section}>
+            {/* Trendelenburg */}
+            <View style={styles.angleSection}>
               <Text style={styles.sectionTitle}>Trendelenburg</Text>
-              <View style={styles.tileRow}>
-                <View style={styles.tile}>
-                  <Text style={styles.tileLabel}>Normal</Text>
-                  <View style={styles.tileValueRow}>
-                    <Text style={styles.tileValue}>{displayed.trendelenburg}</Text>
-                    <Text style={styles.tileUnit}>°</Text>
-                  </View>
+              <View style={styles.angleRow}>
+                <View style={styles.angleItem}>
+                  <Text style={styles.angleLabel}>Normal</Text>
+                  <Text style={styles.angleValue}>{displayed.trendelenburg}°</Text>
                 </View>
-                <View style={styles.tile}>
-                  <Text style={styles.tileLabel}>Reverse</Text>
-                  <View style={styles.tileValueRow}>
-                    <Text style={styles.tileValue}>{displayed.revTrendelenburg}</Text>
-                    <Text style={styles.tileUnit}>°</Text>
-                  </View>
+                <View style={styles.angleItem}>
+                  <Text style={styles.angleLabel}>Reverse</Text>
+                  <Text style={styles.angleValue}>{displayed.revTrendelenburg}°</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Height */}
+            <View style={styles.angleSection}>
+              <Text style={styles.sectionTitle}>Height</Text>
+              <View style={styles.angleRow}>
+                <View style={styles.angleItem}>
+                  <Text style={styles.angleLabel}>Position</Text>
+                  <Text style={styles.angleValue}>0°</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Slide */}
+            <View style={styles.angleSection}>
+              <Text style={styles.sectionTitle}>Slide</Text>
+              <View style={styles.angleRow}>
+                <View style={styles.angleItem}>
+                  <Text style={styles.angleLabel}>Position</Text>
+                  <Text style={styles.angleValue}>0°</Text>
                 </View>
               </View>
             </View>
@@ -155,109 +135,79 @@ const RealPositionPage = () => {
 export default RealPositionPage
 
 const styles = StyleSheet.create({
+      dataDisplay: {
+        padding: 16,
+        backgroundColor: 'black',
+        borderRadius: 8,
+        margin: 16,
+    },
+    statusBar: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 16,
+    },
+    statusText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    rateText: {
+        color: 'white',
+        fontSize: 14,
+        fontWeight: '600',
+    },
   mainContainer: {
     flex: 1,
     backgroundColor: 'black',
     paddingTop: moderateScale(10),
-    paddingHorizontal: moderateScale(10),
+    paddingLeft: moderateScale(10)
+  },
+  backButtonBox: {
+    width: widthPercentageToDP('10%')
   },
   headBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'space-between'
   },
-  backButtonBox: {
-    width: widthPercentageToDP('10%'),
-  },
-  titleWrap: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  title: {
-    color: 'white',
-    fontSize: heightPercentageToDP(2.8),
-    fontWeight: '500',
-  },
-  scrollContent: {
-    paddingHorizontal: widthPercentageToDP('2%'),
-    paddingTop: moderateVerticalScale(6),
-    paddingBottom: moderateVerticalScale(12),
-  },
-  statusBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: moderateScale(12),
-    paddingVertical: moderateVerticalScale(5),
+  angleSection: {
+    marginBottom: 16,
+    backgroundColor: 'black',
+    padding: 12,
     borderRadius: 8,
-    marginBottom: moderateVerticalScale(8),
-  },
-  statusText: {
-    color: 'white',
-    fontSize: heightPercentageToDP(1.6),
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
-  },
-  rateText: {
-    color: 'white',
-    fontSize: heightPercentageToDP(1.5),
-    fontWeight: '600',
-  },
-  section: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 10,
-    paddingBottom: moderateVerticalScale(6),
-    marginBottom: moderateVerticalScale(8),
-    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#333',
   },
   sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
     color: 'white',
-    backgroundColor: '#0492b6',
-    fontSize: heightPercentageToDP(1.8),
-    fontWeight: '600',
-    paddingVertical: moderateVerticalScale(4),
-    paddingHorizontal: moderateScale(12),
+    marginBottom: 8,
   },
-  tileRow: {
+  angleRow: {
     flexDirection: 'row',
-    paddingHorizontal: moderateScale(8),
-    paddingTop: moderateVerticalScale(6),
-    gap: moderateScale(8),
+    justifyContent: 'space-around',
   },
-  tile: {
-    flex: 1,
-    backgroundColor: '#0f0f0f',
-    borderWidth: 1,
-    borderColor: '#262626',
-    borderRadius: 8,
-    paddingHorizontal: moderateScale(10),
-    paddingVertical: moderateVerticalScale(6),
+  angleItem: {
     alignItems: 'center',
   },
-  tileLabel: {
-    color: '#9aa0a6',
-    fontSize: heightPercentageToDP(1.5),
-    marginBottom: moderateVerticalScale(2),
+  angleLabel: {
+    fontSize: 14,
+    color: '#bbb',
+    marginBottom: 4,
   },
-  tileValueRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: moderateScale(3),
-  },
-  tileValue: {
-    color: 'white',
-    fontSize: heightPercentageToDP(2.6),
-    fontWeight: '700',
-  },
-  tileUnit: {
-    color: '#9aa0a6',
-    fontSize: heightPercentageToDP(1.6),
-    fontWeight: '600',
+  angleValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#2196F3',
   },
   timeText: {
-    color: '#666',
-    fontSize: heightPercentageToDP(1.3),
+    fontSize: 12,
+    color: '#999',
     textAlign: 'center',
-    marginTop: moderateVerticalScale(4),
+    marginTop: 8,
   },
 })
