@@ -23,6 +23,7 @@ import slideBtn from "../assets/images/slideBtn.png"
 import revSlideBtn from "../assets/images/revSlideBtn.png"
 import fLockBtn from "../assets/images/fLock.png"
 import fUnlockBtn from "../assets/images/fUnlock.png"
+import labelBtn from "../assets/images/labelBtn.png"
 import { ImageSourcePropType } from "react-native"
 
 export type ButtonType = 'standard' | 'single'; // standard = 3 components, single = 2 components
@@ -35,6 +36,9 @@ export interface ButtonConfig {
     downButton?: ImageSourcePropType;
     label: string;
     isFixed: boolean;
+    // Optional: when set, this dynamic button's visibility is gated by
+    // another button's toggle state instead of its own id.
+    gateBy?: string;
 }
 
 export const FIRST_PAGE_BUTTONS: ButtonConfig[] = [
@@ -86,9 +90,10 @@ export const FIRST_PAGE_BUTTONS: ButtonConfig[] = [
     },
     {
         id:'btn6',
-        type:'single',
+        type:'standard',
         upButton:zeroBtn,
         middleImage:planeImage,
+        downButton:labelBtn,
         label: 'Gyro',
         isFixed: false,
     },

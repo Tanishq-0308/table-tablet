@@ -27,6 +27,7 @@ const MainScreen = () => {
     startRepeatedCommand,
     stopRepeatedCommand,
     startRepeatedZeroCommand,
+    startRepeatedLabelCommand,
   } = useBluetooth();
 
   const stats = useBluetoothStats();
@@ -36,13 +37,24 @@ const MainScreen = () => {
   const { isLocked, lock, unlock } = useLock();
   const { isReverseActive, toggleReverse } = useReverseOrient();
 
-  const fixedButtons = FIRST_PAGE_BUTTONS.filter(btn => btn.isFixed);
-
-  const dynamicButtons = FIRST_PAGE_BUTTONS.filter(
-    btn => !btn.isFixed && buttonStates[btn.id as keyof typeof buttonStates]
+  // Reverse always renders last; everything else keeps the config order.
+  const fixedButtons = FIRST_PAGE_BUTTONS.filter(
+    btn => btn.isFixed && btn.id !== REVERSE_BUTTON_ID
   );
+  const reverseButton = FIRST_PAGE_BUTTONS.find(btn => btn.id === REVERSE_BUTTON_ID);
 
-  const allVisibleButtons = [...fixedButtons, ...dynamicButtons];
+  const dynamicButtons = FIRST_PAGE_BUTTONS.filter(btn => {
+    if (btn.isFixed) return false;
+    // If gateBy is set, follow that other button's toggle state instead of own id.
+    const gateId = (btn.gateBy ?? btn.id) as keyof typeof buttonStates;
+    return buttonStates[gateId];
+  });
+
+  const allVisibleButtons = [
+    ...fixedButtons,
+    ...dynamicButtons,
+    ...(reverseButton ? [reverseButton] : []),
+  ];
 
   // While reverse-orientation is active, swap trend up/down so up sends rev-trend
   // and down sends trend. All other buttons unaffected.
@@ -87,6 +99,14 @@ const MainScreen = () => {
       return;
     }
     if (isLocked) return;
+    // Label sits on the down position of the Zero tile (btn6); sends only
+    // the Zero packet (no modifier frame).
+    if (buttonId === ZERO_BUTTON_ID) {
+      console.log(`${label} (${buttonId}) DOWN pressed → Label (Zero only)`);
+      startRepeatedLabelCommand(200);
+      doFeedback();
+      return;
+    }
     const commandCode = getCommandCode(buttonId, resolveDirection(buttonId, false));
     console.log(`${label} (${buttonId}) DOWN pressed → Command: 0x${commandCode.toString(16)}`);
     startRepeatedCommand(commandCode, 200);
@@ -104,10 +124,15 @@ const MainScreen = () => {
           {allVisibleButtons.map((btn) => {
             const isLockBtn = btn.id === LOCK_BUTTON_ID;
             const isReverseBtn = btn.id === REVERSE_BUTTON_ID;
+            const isTrendBtn = btn.id === TREND_BUTTON_ID;
             // While locked: disable everything except the unlock action (btn5 down).
             // The lock button (btn5 up) is also disabled while locked since we're already locked.
             const upDisabled = isLocked && !isLockBtn ? true : (isLocked && isLockBtn);
             const downDisabled = isLocked && !isLockBtn;
+            // Reverse turns green when active; Trend turns red while reverse is active
+            // (signals that its up/down direction is inverted).
+            const active = (isReverseBtn || isTrendBtn) && isReverseActive;
+            const activeVariant = isTrendBtn ? 'red' : 'green';
             return (
               <View key={btn.id}>
                 <CustomButton
@@ -123,7 +148,8 @@ const MainScreen = () => {
                   onPressout={handlePressOut}
                   upDisabled={upDisabled}
                   downDisabled={downDisabled}
-                  active={isReverseBtn && isReverseActive}
+                  active={active}
+                  activeVariant={activeVariant}
                 />
               </View>
             );

@@ -62,6 +62,7 @@ interface BluetoothContextType {
     sendSingleCommand: (code: number, duration?: number) => void;
     startRepeatedRawCommand: (bytes: number[], intervalMs?: number) => void;
     startRepeatedZeroCommand: (intervalMs?: number) => void;
+    startRepeatedLabelCommand: (intervalMs?: number) => void;
 }
 
 const BluetoothContext = createContext<BluetoothContextType | undefined>(undefined);
@@ -386,14 +387,38 @@ export const BluetoothProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         intervalRef.current = setInterval(tick, intervalMs);
     }, [sendRawCommand]);
 
+    // Label button: sends ONLY the Zero packet (no modifier frame) repeatedly
+    // while held. Distinct from Gyro Zero which interleaves both packets.
+    const startRepeatedLabelCommand = useCallback((intervalMs: number = 200) => {
+        const zeroPacket = [
+            0x43, 0x47, 0xFE, 0x26,
+            0x19, 0x00, 0x00, 0x01,
+            0x00, 0x95, 0xA5, 0xB5,
+            0xC5, 0xD5, 0x12, 0x4E,
+        ];
+
+        if (intervalRef.current !== null) {
+            clearInterval(intervalRef.current);
+        }
+        sendRawCommand(zeroPacket);
+        intervalRef.current = setInterval(() => {
+            sendRawCommand(zeroPacket);
+        }, intervalMs);
+    }, [sendRawCommand]);
+
     // ✅ Stop repeated command
+    // Sends 4 stop frames spaced ~50ms apart to survive Bluetooth packet
+    // loss — a single dropped stop frame would leave the table moving until
+    // the next user action.
     const stopRepeatedCommand = useCallback(() => {
         if (intervalRef.current !== null) {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
         }
-        // Send stop command
         sendCommand(0x00);
+        setTimeout(() => sendCommand(0x00), 50);
+        setTimeout(() => sendCommand(0x00), 100);
+        setTimeout(() => sendCommand(0x00), 150);
     }, [sendCommand]);
 
     // ✅ Send single command with auto-stop
@@ -515,6 +540,7 @@ export const BluetoothProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         sendSingleCommand,
         startRepeatedRawCommand,
         startRepeatedZeroCommand,
+        startRepeatedLabelCommand,
     }), [
         isConnected,
         isReceivingData,
@@ -532,6 +558,7 @@ export const BluetoothProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         sendSingleCommand,
         startRepeatedRawCommand,
         startRepeatedZeroCommand,
+        startRepeatedLabelCommand,
     ]);
 
     return (

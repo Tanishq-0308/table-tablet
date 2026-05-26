@@ -16,6 +16,7 @@ interface CustomButtonProps {
     upDisabled?: boolean;
     downDisabled?: boolean;
     active?: boolean;
+    activeVariant?: 'green' | 'red';
 }
 
 const CustomButton = ({
@@ -29,11 +30,14 @@ const CustomButton = ({
     upDisabled = false,
     downDisabled = false,
     active = false,
+    activeVariant = 'green',
 }: CustomButtonProps) => {
+
+    const activeStyle = activeVariant === 'red' ? styles.activeBoxRed : styles.activeBox;
 
     if (type === 'single') {
         return (
-            <View style={[styles.singleBox, active && styles.activeBox]}>
+            <View style={[styles.singleBox, active && activeStyle]}>
                 <Image source={middleImage} style={styles.bigIcon} />
                 <TouchableOpacity
                     onPressIn={onUpPress}
@@ -48,7 +52,7 @@ const CustomButton = ({
     }
 
     return (
-        <View style={[styles.mainBox, active && styles.activeBox]}>
+        <View style={[styles.mainBox, active && activeStyle]}>
             <TouchableOpacity
                 onPressIn={onUpPress}
                 onPressOut={onPressout}
@@ -121,5 +125,9 @@ const styles = StyleSheet.create({
     activeBox: {
         backgroundColor: '#1e7a3a',
         borderColor: '#46d134',
+    },
+    activeBoxRed: {
+        backgroundColor: '#7a1e1e',
+        borderColor: '#d13434',
     },
 })
