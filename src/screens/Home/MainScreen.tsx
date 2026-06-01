@@ -37,11 +37,11 @@ const MainScreen = () => {
   const { isLocked, lock, unlock } = useLock();
   const { isReverseActive, toggleReverse } = useReverseOrient();
 
-  // Reverse always renders last; everything else keeps the config order.
+  // Reverse moved to the global header toggle; its tile is hidden but the
+  // config entry stays in place.
   const fixedButtons = FIRST_PAGE_BUTTONS.filter(
     btn => btn.isFixed && btn.id !== REVERSE_BUTTON_ID
   );
-  const reverseButton = FIRST_PAGE_BUTTONS.find(btn => btn.id === REVERSE_BUTTON_ID);
 
   const dynamicButtons = FIRST_PAGE_BUTTONS.filter(btn => {
     if (btn.isFixed) return false;
@@ -50,11 +50,7 @@ const MainScreen = () => {
     return buttonStates[gateId];
   });
 
-  const allVisibleButtons = [
-    ...fixedButtons,
-    ...dynamicButtons,
-    ...(reverseButton ? [reverseButton] : []),
-  ];
+  const allVisibleButtons = [...fixedButtons, ...dynamicButtons];
 
   // While reverse-orientation is active, swap trend up/down so up sends rev-trend
   // and down sends trend. All other buttons unaffected.

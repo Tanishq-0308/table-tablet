@@ -1,8 +1,9 @@
 import { Image, StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 import Logo from '../../assets/Logo/logo1.png'
-import { moderateScale, scale, verticalScale } from 'react-native-size-matters' 
+import { moderateScale, scale, verticalScale } from 'react-native-size-matters'
 import FeedbackModeSelector from './FeedbackModeSelector'
+import ReverseOrientToggle from './ReverseOrientToggle'
 
 const Header = () => {
   return (
@@ -11,7 +12,10 @@ const Header = () => {
         source={Logo}
         style={styles.logoImage}
       />
-      <FeedbackModeSelector/>
+      <View style={styles.rightCluster}>
+        <ReverseOrientToggle/>
+        <FeedbackModeSelector/>
+      </View>
     </View>
   )
 }
@@ -30,5 +34,11 @@ const styles = StyleSheet.create({
       height: verticalScale(30),
       width: scale(70),
       margin:moderateScale(10)
-    }
+    },
+    rightCluster: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: moderateScale(12),
+      paddingRight: moderateScale(10),
+    },
 })
