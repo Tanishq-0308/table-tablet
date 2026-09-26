@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { NavigationContainer } from '@react-navigation/native'
@@ -10,40 +10,39 @@ import { LockProvider } from './contexts/LockContext'
 import { ReverseOrientProvider } from './contexts/ReverseOrientContext'
 import { MemoryProvider } from './contexts/MemoryContext'
 import { OffsetProvider } from './contexts/OffsetContext'
-import { NativeEventEmitter, NativeModules } from 'react-native'
+import { NativeEventEmitter, NativeModules, StatusBar } from 'react-native' // ← add StatusBar
 
-const { BluetoothModule }= NativeModules;
+const { BluetoothModule } = NativeModules;
 const btEvent = new NativeEventEmitter(BluetoothModule);
 
-btEvent.addListener("BluetoothLog", (_data) => {
-  // Hex dump disabled. To re-enable for debugging packet shape, uncomment:
-  // const binary = global.atob(_data.log);
-  // const hex: string[] = [];
-  // for (let i = 0; i < binary.length; i++) {
-  //   hex.push(binary.charCodeAt(i).toString(16).padStart(2, '0'));
-  // }
-  // console.log("NATIVE LOG:", hex.join(' '));
-});
+btEvent.addListener("BluetoothLog", (_data) => {});
+
 const App = () => {
+
+  // ← ADD THIS
+  useEffect(() => {
+    StatusBar.setHidden(true, 'none');
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <BluetoothProvider>
-        <FeedbackProvider>
-          <ButtonSettingsProvider>
-            <LockProvider>
-              <ReverseOrientProvider>
-                <MemoryProvider>
-                  <OffsetProvider>
-                    <NavigationContainer>
-                      <MainStack />
-                    </NavigationContainer>
-                  </OffsetProvider>
-                </MemoryProvider>
-              </ReverseOrientProvider>
-            </LockProvider>
-          </ButtonSettingsProvider>
-        </FeedbackProvider>
+          <FeedbackProvider>
+            <ButtonSettingsProvider>
+              <LockProvider>
+                <ReverseOrientProvider>
+                  <MemoryProvider>
+                    <OffsetProvider>
+                      <NavigationContainer>
+                        <MainStack />
+                      </NavigationContainer>
+                    </OffsetProvider>
+                  </MemoryProvider>
+                </ReverseOrientProvider>
+              </LockProvider>
+            </ButtonSettingsProvider>
+          </FeedbackProvider>
         </BluetoothProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
